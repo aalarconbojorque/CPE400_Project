@@ -7,36 +7,24 @@
 
 import networkx as nx
 import matplotlib.pyplot as plt
+import sys
 
 
 def main():
 
-    print("Hello World!")
     G = nx.Graph()
-    G.add_node(1, failure=5)
-    G.add_node(2, failure=100)
-    G.add_node(3, failure=10)
-    G.add_node(4, failure=43)
-    G.add_node(5, failure=100)
-    G.add_edge(1, 2, failure=5)
-    G.add_edge(1, 3, failure=100)
-    G.add_edge(2, 3, failure=5)
-    G.add_edge(3, 4, failure=5)
-    G.add_edge(1, 5, failure=100)
-    G.add_edge(5, 4, failure=5)
 
-    H = G.copy()
-    remove = []
-    for node in H.nodes():
-        if H.nodes[node]['failure'] >= 100:
-            remove.append(node)
-        else:
-            pass
+    # Check that both input files exist
+    nodesFile = CheckFile("nodes.txt")
+    edgesFile = CheckFile("edges.txt")
 
-    G.remove_nodes_from(remove)
+    # If they do then input data and build the first graph
+    if nodesFile and edgesFile:
+        ObtainNodeData(G)
 
-    # G = H.copy()
-    
+    else:
+        sys.exit()
+
     # Setup graph
     pos = nx.circular_layout(G)
     subax1 = plt.subplot(121)
@@ -53,56 +41,92 @@ def main():
     ax.margins(0.2)
 
     # Plot shortest path and graph
-    path = nx.shortest_path(G, source=1, target=4, weight="failure")
-    path_edges = zip(path, path[1:])
-    path_edges = set(path_edges)
-    nx.draw_networkx_nodes(G, pos, nodelist=path,
-                           node_color='r', node_size=2000)
-    nx.draw_networkx_edges(G, pos, edgelist=path_edges,
-                           edge_color='r', width=5)
+    # path = nx.shortest_path(G, source=1, target=4, weight="failure")
+    # path_edges = zip(path, path[1:])
+    # path_edges = set(path_edges)
+    # nx.draw_networkx_nodes(G, pos, nodelist=path,
+    #                        node_color='r', node_size=2000)
+    # nx.draw_networkx_edges(G, pos, edgelist=path_edges,
+    #                        edge_color='r', width=5)
+
     plt.show()
 
-    # # Remove 100% edges
-    # edgelist = list(G.edges.data("failure"))
-    # for u, v, failure in edgelist:
-    #   if failure == "100%":
-    #     print(u, v , ":", failure)
-    #     G.remove_edge(u, v)
-    #   pass
+    # plt.clf()
 
-    # # Remove 100% nodes
-    # nodelist = list(G.nodes.data("failure"))
-    # for u, failure in nodelist:
-    #   if failure == "100%":
-    #     print(u, ":", failure)
-    #     G.remove_node(u)
-    #   pass
+    # #Remove nodes
+    # H = G.copy()
+    # remove = []
+    # for node in H.nodes():
+    #     if H.nodes[node]['failure'] >= 100:
+    #         remove.append(node)
+    #     else:
+    #         pass
+    # G.remove_nodes_from(remove)
 
-    # #Setup graph
+    # # Setup graph
     # pos = nx.circular_layout(G)
     # subax1 = plt.subplot(121)
-    # nx.draw(G,pos, font_weight='bold', node_size=2000)
-    # edge_labels = nx.get_edge_attributes(G,'failure')
-    # node_labels = nx.get_node_attributes(G,'failure')
+    # nx.draw(G, pos, font_weight='bold', node_size=2000)
+    # edge_labels = nx.get_edge_attributes(G, 'failure')
+    # node_labels = nx.get_node_attributes(G, 'failure')
     # for key, value in node_labels.items():
-    #     node_labels[key] = "[" + str(key) + "," + value + "]"
-    # nx.draw_networkx_edge_labels(G,pos,edge_labels=edge_labels,font_color='black', font_weight='bold')
-    # nx.draw_networkx_labels(G,pos,labels=node_labels,font_color='black',  font_size=10, font_weight='bold')
+    #     node_labels[key] = "[" + str(key) + "," + str(value) + "]"
+    # nx.draw_networkx_edge_labels(
+    #     G, pos, edge_labels=edge_labels, font_color='black', font_weight='bold')
+    # nx.draw_networkx_labels(G, pos, labels=node_labels,
+    #                         font_color='black',  font_size=10, font_weight='bold')
     # ax = plt.gca()
     # ax.margins(0.2)
 
-    # #Plot shortest path and graph
-    # path = nx.shortest_path(G, source=1, target=4)
-    # path_edges = zip(path,path[1:])
+    # # Plot shortest path and graph
+    # path = nx.shortest_path(G, source=1, target=4, weight="failure")
+    # path_edges = zip(path, path[1:])
     # path_edges = set(path_edges)
-    # nx.draw_networkx_nodes(G,pos,nodelist=path,node_color='r', node_size=2000)
-    # nx.draw_networkx_edges(G,pos, edgelist=path_edges,edge_color='r',width=5)
-    # plt.show()
+    # nx.draw_networkx_nodes(G, pos, nodelist=path,
+    #                        node_color='r', node_size=2000)
+    # nx.draw_networkx_edges(G, pos, edgelist=path_edges,
+    #                        edge_color='r', width=5)
+
+    # plt.draw()
+    # plt.pause(2)
 
 
 # ----------------------------------------------------------------------------
-# FUNCTION NAME:     CompMagSqr()
-# PURPOSE:           Computes the magnitude squared
+# FUNCTION NAME:     ObtainNodeData(G)
+# PURPOSE:           Open the input files and populate graph with nodes, edges
 # -----------------------------------------------------------------------------
+def ObtainNodeData(G):
+
+    # Read the nodes file and create nodes
+    nFile = open('nodes.txt', 'r')
+    for line in nFile:
+        line = line.replace('%', '')
+        line = line.rstrip("\n")
+        line = line.split('|')
+        G.add_node(int(line[0]), failure=int(line[1]))
+
+    # Read the edges file and create nodes
+    nFile = open('edges.txt', 'r')
+    for line in nFile:
+        line = line.replace('%', '')
+        line = line.rstrip("\n")
+        line = line.split('|')
+        G.add_edge(int(line[0]), int(line[1]), failure=int(line[2]))
+
+# ----------------------------------------------------------------------------
+# FUNCTION NAME:     CheckFile(fname)
+# PURPOSE:           Check if we can open the files
+# -----------------------------------------------------------------------------
+
+
+def CheckFile(fname):
+    try:
+        f = open(fname, "r")
+        return 1
+    except IOError:
+        print("Error: " + fname + " file was not found")
+        return 0
+
+
 if __name__ == "__main__":
     main()
