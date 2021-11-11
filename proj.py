@@ -9,6 +9,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import sys
 
+from numpy import source
+
 
 def main():
 
@@ -41,19 +43,88 @@ def main():
         except:
             print('Wrong input. Please enter a number ...')
         if option == 1:
-            print("Option 1")
+            runSimulation(G)
         elif option == 2:
              DisplayGraph(G)
         elif option == 3:
             print('Thank you !')
             exit()
         else:
-            print('Invalid option. Please enter a number between 1 and 4.')
+            print('Invalid option. Please enter a number.')
     
     
 
     
+# ----------------------------------------------------------------------------
+# FUNCTION NAME:     runSimulation(G)
+# PURPOSE:           Runs the shortest path simulation 
+# -----------------------------------------------------------------------------
 
+
+def runSimulation(G):
+    
+    #Obtain a valid path from sourceNode -> destNode
+    returnedNodes = ObtainNodesMenu(G)
+    sourceNode = returnedNodes[0]
+    destNode = returnedNodes[1]
+    print("Running simulation from node", sourceNode, "->", destNode)
+    
+# ----------------------------------------------------------------------------
+# FUNCTION NAME:     ObtainNodesMenu(G, sourceNode, destNode)
+# PURPOSE:           Runs menu to obtain the source and dest nodes
+# -----------------------------------------------------------------------------
+
+
+def ObtainNodesMenu(G):
+    
+    print("-------------------------------------------------------------")
+    
+    #Loop to check if the source node exists
+    loop1=True 
+    while(loop1):
+        sourceNode = ''
+        try:
+            sourceNode = int(input('Please enter your source node : '))
+        except:
+            print('Wrong input. Please enter a number ...')
+        else:
+            check = checkIfNodeExists(G, sourceNode)
+            if check:
+                loop1 = False
+            else :
+                loop1 = True 
+    
+    #Loop to check if the source node exists
+    loop2=True 
+    while(loop2):
+        destNode = ''
+        try:
+            destNode = int(input('Please enter your destination node : '))
+        except:
+            print('Wrong input. Please enter a number ...')
+        else:
+            check2 = checkIfNodeExists(G, destNode)
+            if check2 and (sourceNode != destNode):
+                loop2 = False
+            else :
+                loop2 = True    
+
+    return sourceNode, destNode
+    
+# ----------------------------------------------------------------------------
+# FUNCTION NAME:     checkIfNodeExists(G, node)
+# PURPOSE:           Checks if the passed node exists in the graph 
+# -----------------------------------------------------------------------------
+
+
+def checkIfNodeExists(G, node):
+      
+   if G.has_node(node):
+       return True
+   else : 
+        print("Node", node , "could not be found in the graph")
+        return False
+	
 
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     DisplayGraph(G)
