@@ -8,8 +8,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import sys
-
-from numpy import source
+import random
 
 
 def main():
@@ -29,8 +28,8 @@ def main():
 
     print("-------------------------------------------------------------")
     print("Dynamic routing mechanism design in a faulty network Simulation")
-    
-    #Main menu loop
+
+    # Main menu loop
     while(True):
         print("-------------------------------------------------------------")
         print("Menu Options : ")
@@ -45,30 +44,82 @@ def main():
         if option == 1:
             runSimulation(G)
         elif option == 2:
-             DisplayGraph(G)
+            DisplayGraph(G)
         elif option == 3:
             print('Thank you !')
             exit()
         else:
             print('Invalid option. Please enter a number.')
-    
-    
 
-    
+
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     runSimulation(G)
-# PURPOSE:           Runs the shortest path simulation 
+# PURPOSE:           Runs the shortest path simulation
 # -----------------------------------------------------------------------------
 
 
 def runSimulation(G):
-    
-    #Obtain a valid path from sourceNode -> destNode
+
+    # Obtains valid sourceNode and destNode
     returnedNodes = ObtainNodesMenu(G)
     sourceNode = returnedNodes[0]
     destNode = returnedNodes[1]
-    print("Running simulation from node", sourceNode, "->", destNode)
-    
+    print("-------------------------------------------------------------")
+    print("A path from router", sourceNode, "->", destNode,
+          "will be experimented on using the provided network.")
+    print("Without any network failures, the shortest route is",
+          nx.shortest_path(G, source=sourceNode, target=destNode), ".")
+
+    print("\nRunning failure simulation ...")
+    H = simulateNetworkFailues(G)
+  
+
+# ----------------------------------------------------------------------------
+# FUNCTION NAME:     simulateNetworkFailues(G)
+# PURPOSE:           Modifes the input network based on the failure probablity
+# -----------------------------------------------------------------------------
+
+
+def simulateNetworkFailues(G):
+
+    print("\nThe following links between routers have failed due to their chance of failure:")
+
+    # Randomly fail edges based on percentage of failure
+    edgelist = list(G.edges.data("failure"))
+    # This list will be used later on to remove edges from the graph 
+    edgelistRemoval = list(G.edges.data("failure"))
+    for index, edge in enumerate(edgelist):
+        
+        perc = float(edge[2])
+        val = float(random.randint(0, 100))
+
+        #Randomly compute a failure chance
+        if val <= perc:
+            per = str(edge[2]) + "%"
+            print("-", edge[0], "->", edge[1], ":", per, "failure")
+        else:
+            edgelistRemoval.remove(edge)
+
+    print("\nThe following routers have failed due to their chance of failure:")
+    # Randomly fail nodes based on percentage of failure
+    nodelist = list(G.nodes.data("failure"))
+    # This list will be used later on to remove nodes from the graph 
+    nodelistRemoval = []
+    for index, node in enumerate(nodelist):
+        
+        perc = float(node[1])
+        val = float(random.randint(0, 100))
+
+        #Randomly compute a failure chance
+        if val <= perc:
+            per = str(node[1]) + "%"
+            print("-", node[0], ":", per, "failure")
+            nodelistRemoval.append(node[0])
+        else:
+            pass
+
+    return edgelistRemoval, nodelistRemoval
+
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     ObtainNodesMenu(G, sourceNode, destNode)
 # PURPOSE:           Runs menu to obtain the source and dest nodes
@@ -76,64 +127,66 @@ def runSimulation(G):
 
 
 def ObtainNodesMenu(G):
-    
+
     print("-------------------------------------------------------------")
-    
-    #Loop to check if the source node exists
-    loop1=True 
+
+    # Loop to check if the source node exists
+    loop1 = True
     while(loop1):
         sourceNode = ''
         try:
-            sourceNode = int(input('Please enter your source node : '))
+            sourceNode = int(
+                input('Please enter your source router number : '))
         except:
             print('Wrong input. Please enter a number ...')
         else:
             check = checkIfNodeExists(G, sourceNode)
             if check:
                 loop1 = False
-            else :
-                loop1 = True 
-    
-    #Loop to check if the source node exists
-    loop2=True 
+            else:
+                loop1 = True
+
+    # Loop to check if the desination node exists
+    loop2 = True
     while(loop2):
         destNode = ''
         try:
-            destNode = int(input('Please enter your destination node : '))
+            destNode = int(
+                input('Please enter your destination router number : '))
         except:
             print('Wrong input. Please enter a number ...')
         else:
             check2 = checkIfNodeExists(G, destNode)
             if check2 and (sourceNode != destNode):
                 loop2 = False
-            else :
-                loop2 = True    
+            else:
+                loop2 = True
 
     return sourceNode, destNode
-    
+
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     checkIfNodeExists(G, node)
-# PURPOSE:           Checks if the passed node exists in the graph 
+# PURPOSE:           Checks if the passed node exists in the graph
 # -----------------------------------------------------------------------------
 
 
 def checkIfNodeExists(G, node):
-      
-   if G.has_node(node):
-       return True
-   else : 
-        print("Node", node , "could not be found in the graph")
+
+    if G.has_node(node):
+        return True
+    else:
+        print("Router", node, "could not be found in the network. Please try again.")
         return False
-	
+
 
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     DisplayGraph(G)
-# PURPOSE:           Displays a window graph 
+# PURPOSE:           Displays a window graph
 # -----------------------------------------------------------------------------
 
 
 def DisplayGraph(G):
-    
+
     # Setup graph
     pos = nx.circular_layout(G)
     subax1 = plt.subplot(121)
@@ -154,6 +207,8 @@ def DisplayGraph(G):
 # FUNCTION NAME:     ObtainNodeData(G)
 # PURPOSE:           Open the input files and populate graph with nodes, edges
 # -----------------------------------------------------------------------------
+
+
 def ObtainNodeData(G):
 
     # Read the nodes file and create nodes
