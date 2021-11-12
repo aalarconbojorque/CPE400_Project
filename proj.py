@@ -42,9 +42,10 @@ def main():
         except:
             print('Wrong input. Please enter a number ...')
         if option == 1:
+            DisplayGraph(G, 1)
             runSimulation(G)
         elif option == 2:
-            DisplayGraph(G)
+            pass
         elif option == 3:
             print('Thank you !')
             exit()
@@ -71,8 +72,78 @@ def runSimulation(G):
           nx.shortest_path(G, source=sourceNode, target=destNode), ".")
 
     print("\nRunning failure simulation ...")
-    H = simulateNetworkFailues(G)
-  
+    # RemovalList[0] - edges that failed
+    # RemovalList[1] - nodes that failed
+    RemovalLists = simulateNetworkFailues(G)
+
+    # Create a copy of the network to remove edges and routes
+    H = G.copy()
+    H.remove_edges_from(RemovalLists[0])
+    H.remove_nodes_from(RemovalLists[1])
+
+    # If all the network fails we need to retry
+    if H.number_of_edges() == 0:
+        print("\nUnfortunaltey because of the failures, no links are available to create a route. Please try another experiment.")
+    else:
+
+        pathStillExists = False
+        sourceCheck = H.has_node(sourceNode)
+        destCheck = H.has_node(destNode)
+
+        # Display the network graph after the failures
+        DisplayGraph(H, 1)
+
+        # Check if our source and desination nodes are still good
+        if(not sourceCheck or not destCheck):
+
+            print("\nUnfortunaltey, either the source or desination router no longer exists. Please try another route.")
+
+            # Since they are not we need new nodes
+            returnedNodes = ObtainNodesMenu(H)
+            sourceNode = returnedNodes[0]
+            destNode = returnedNodes[1]
+
+            # We keep looping if our path does not work
+            while not pathStillExists:
+
+                # Check if a path exists between the two nodes
+                pathStillExists = nx.has_path(H, sourceNode, destNode)
+
+                # If we cannot find a path, we need to let the user enter new nodes
+                if not pathStillExists:
+                    print(
+                        "\nUnfortunaltey, a route cannot be established between the two routers. Please try another route.")
+                    returnedNodes = ObtainNodesMenu(H)
+                    sourceNode = returnedNodes[0]
+                    destNode = returnedNodes[1]
+
+                # If we find a path, calculate the shortest route and update graph
+                else:
+                    print("\nWith the current network failures, the shortest route between", sourceNode, "and", destNode, "is",
+                          nx.shortest_path(H, source=sourceNode, target=destNode), ".")
+                    DisplayGraph(H, 1)
+        else:
+
+            # We keep looping if our path does not work
+            while not pathStillExists:
+
+                # Check if a path exists between the two nodes
+                pathStillExists = nx.has_path(H, sourceNode, destNode)
+
+                # If we cannot find a path, we need to let the user enter new nodes
+                if not pathStillExists:
+                    print(
+                        "\nUnfortunaltey, a route cannot be established between the two routers. Please try another route.")
+                    returnedNodes = ObtainNodesMenu(H)
+                    sourceNode = returnedNodes[0]
+                    destNode = returnedNodes[1]
+
+                # If we find a path, calculate the shortest route and update graph
+                else:
+                    print("\nWith the current network failures, the shortest route between", sourceNode, "and", destNode, "is",
+                          nx.shortest_path(H, source=sourceNode, target=destNode), ".")
+                    DisplayGraph(H, 1)
+
 
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     simulateNetworkFailues(G)
@@ -86,14 +157,14 @@ def simulateNetworkFailues(G):
 
     # Randomly fail edges based on percentage of failure
     edgelist = list(G.edges.data("failure"))
-    # This list will be used later on to remove edges from the graph 
+    # This list will be used later on to remove edges from the graph
     edgelistRemoval = list(G.edges.data("failure"))
     for index, edge in enumerate(edgelist):
-        
+
         perc = float(edge[2])
         val = float(random.randint(0, 100))
 
-        #Randomly compute a failure chance
+        # Randomly compute a failure chance
         if val <= perc:
             per = str(edge[2]) + "%"
             print("-", edge[0], "->", edge[1], ":", per, "failure")
@@ -103,14 +174,14 @@ def simulateNetworkFailues(G):
     print("\nThe following routers have failed due to their chance of failure:")
     # Randomly fail nodes based on percentage of failure
     nodelist = list(G.nodes.data("failure"))
-    # This list will be used later on to remove nodes from the graph 
+    # This list will be used later on to remove nodes from the graph
     nodelistRemoval = []
     for index, node in enumerate(nodelist):
-        
+
         perc = float(node[1])
         val = float(random.randint(0, 100))
 
-        #Randomly compute a failure chance
+        # Randomly compute a failure chance
         if val <= perc:
             per = str(node[1]) + "%"
             print("-", node[0], ":", per, "failure")
@@ -185,11 +256,12 @@ def checkIfNodeExists(G, node):
 # -----------------------------------------------------------------------------
 
 
-def DisplayGraph(G):
+def DisplayGraph(G, fig):
 
     # Setup graph
+    plt.clf()
     pos = nx.circular_layout(G)
-    subax1 = plt.subplot(121)
+    # subax1 = plt.subplot(121)
     nx.draw(G, pos, font_weight='bold', node_size=2000)
     edge_labels = nx.get_edge_attributes(G, 'failure')
     node_labels = nx.get_node_attributes(G, 'failure')
@@ -201,7 +273,8 @@ def DisplayGraph(G):
                             font_color='black',  font_size=10, font_weight='bold')
     ax = plt.gca()
     ax.margins(0.2)
-    plt.show()
+    plt.figure(fig)
+    plt.show(block=False)
 
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     ObtainNodeData(G)
