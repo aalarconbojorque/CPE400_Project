@@ -42,7 +42,7 @@ def main():
         except:
             print('Wrong input. Please enter a number ...')
         if option == 1:
-            DisplayGraph(G, 1)
+            DisplayGraph(G, "", 1, False, "", False, "", "")
             runSimulation(G)
         elif option == 2:
             pass
@@ -91,7 +91,7 @@ def runSimulation(G):
         destCheck = H.has_node(destNode)
 
         # Display the network graph after the failures
-        DisplayGraph(H, 1)
+        DisplayGraph(G, H, 1, False, "", True, RemovalLists[1], RemovalLists[0])
 
         # Check if our source and desination nodes are still good
         if(not sourceCheck or not destCheck):
@@ -119,9 +119,13 @@ def runSimulation(G):
 
                 # If we find a path, calculate the shortest route and update graph
                 else:
+                    spath =  nx.shortest_path(H, source=sourceNode, target=destNode)
+                    spath_edges = zip(spath,spath[1:])
+                    spath_edges = set(spath_edges)
                     print("\nWith the current network failures, the shortest route between", sourceNode, "and", destNode, "is",
-                          nx.shortest_path(H, source=sourceNode, target=destNode), ".")
-                    DisplayGraph(H, 1)
+                          spath, ".")
+                    DisplayGraph2(H, 1)
+                    DisplayGraph(G, H, 1, True, spath_edges, True, RemovalLists[1], RemovalLists[0])
         else:
 
             # We keep looping if our path does not work
@@ -140,9 +144,14 @@ def runSimulation(G):
 
                 # If we find a path, calculate the shortest route and update graph
                 else:
+                    spath =  nx.shortest_path(H, source=sourceNode, target=destNode)
+                    spath_edges = zip(spath,spath[1:])
+                    spath_edges = set(spath_edges)
                     print("\nWith the current network failures, the shortest route between", sourceNode, "and", destNode, "is",
-                          nx.shortest_path(H, source=sourceNode, target=destNode), ".")
-                    DisplayGraph(H, 1)
+                          spath, ".")
+                    DisplayGraph2(H, 1)
+                    DisplayGraph(G, H, 1, True, spath_edges, True, RemovalLists[1], RemovalLists[0])
+                    
 
 
 # ----------------------------------------------------------------------------
@@ -254,9 +263,7 @@ def checkIfNodeExists(G, node):
 # FUNCTION NAME:     DisplayGraph(G)
 # PURPOSE:           Displays a window graph
 # -----------------------------------------------------------------------------
-
-
-def DisplayGraph(G, fig):
+def DisplayGraph2(G, fig):
 
     # Setup graph
     plt.clf()
@@ -274,7 +281,125 @@ def DisplayGraph(G, fig):
     ax = plt.gca()
     ax.margins(0.2)
     plt.figure(fig)
-    plt.show(block=False)
+    plt.show()
+
+def DisplayGraph(P, H, fig, shortestPath, spath, deadNodes, dnodes, dedges):
+
+    G = P.copy()
+
+    if shortestPath and deadNodes:
+
+       # G original graph
+        # H graph with only the good nodes
+        # dnodes nodes that we removed
+        # Want to leave only the bad nodes 
+
+        color_map = []
+        i = 0
+
+        #Make all nodes green
+        for node in G:
+            color_map.append('green')    
+
+        #Make the nodes that failed red
+        for index, item in enumerate(dnodes):
+            color_map[dnodes[index]-1] = 'red'
+
+        #Remove the edges of all the failed nodes
+        for index, item in enumerate(dnodes):
+            edgesRemoved = list(G.edges(dnodes[index]))
+            G.remove_edges_from(edgesRemoved)
+        
+        #Remove edges that failed
+        G.remove_edges_from(dedges)
+        
+        
+        # Setup graph
+        plt.clf()
+        pos = nx.circular_layout(G)
+        nx.draw(G, pos, node_color=color_map, font_weight='bold', node_size=2000)
+        edge_labels = nx.get_edge_attributes(G, 'failure')
+        node_labels = nx.get_node_attributes(G, 'failure')
+        for key, value in node_labels.items():
+            node_labels[key] = "[" + str(key) + "," + str(value) + "]"
+        nx.draw_networkx_edge_labels(
+            G, pos, edge_labels=edge_labels, font_color='black', font_weight='bold')
+        nx.draw_networkx_labels(G, pos, labels=node_labels,
+                                font_color='black',  font_size=10, font_weight='bold')
+        nx.draw_networkx_edges(G,pos, edgelist=spath,edge_color='g',width=3)
+        ax = plt.gca()
+        ax.margins(0.2)
+        plt.figure(fig)
+        plt.show(block=False)
+    
+    elif not shortestPath and deadNodes:
+        
+        # G original graph
+        # H graph with only the good nodes
+        # dnodes nodes that we removed
+        # Want to leave only the bad nodes 
+
+        color_map = []
+        i = 0
+
+        #Make all nodes green
+        for node in G:
+            color_map.append('green')    
+
+        #Make the nodes that failed red
+        for index, item in enumerate(dnodes):
+            color_map[dnodes[index]-1] = 'red'
+
+        #Remove the edges of all the failed nodes
+        for index, item in enumerate(dnodes):
+            edgesRemoved = list(G.edges(dnodes[index]))
+            G.remove_edges_from(edgesRemoved)
+        
+        #Remove edges that failed
+        G.remove_edges_from(dedges)
+        
+        
+        # Setup graph
+        plt.clf()
+        pos = nx.circular_layout(G)
+        nx.draw(G, pos, node_color=color_map, font_weight='bold', node_size=2000)
+        edge_labels = nx.get_edge_attributes(G, 'failure')
+        node_labels = nx.get_node_attributes(G, 'failure')
+        for key, value in node_labels.items():
+            node_labels[key] = "[" + str(key) + "," + str(value) + "]"
+        nx.draw_networkx_edge_labels(
+            G, pos, edge_labels=edge_labels, font_color='black', font_weight='bold')
+        nx.draw_networkx_labels(G, pos, labels=node_labels,
+                                font_color='black',  font_size=10, font_weight='bold')
+        
+        ax = plt.gca()
+        ax.margins(0.2)
+        plt.figure(fig)
+        plt.show(block=False)
+    
+    elif  not shortestPath and not deadNodes:
+        
+        # Setup graph
+        plt.clf()
+        pos = nx.circular_layout(G)
+        nx.draw(G, pos, font_weight='bold', node_size=2000)
+        edge_labels = nx.get_edge_attributes(G, 'failure')
+        node_labels = nx.get_node_attributes(G, 'failure')
+        for key, value in node_labels.items():
+            node_labels[key] = "[" + str(key) + "," + str(value) + "]"
+        nx.draw_networkx_edge_labels(
+            G, pos, edge_labels=edge_labels, font_color='black', font_weight='bold')
+        nx.draw_networkx_labels(G, pos, labels=node_labels,
+                                font_color='black',  font_size=10, font_weight='bold')
+        ax = plt.gca()
+        ax.margins(0.2)
+        plt.figure(fig)
+        plt.show(block=False)
+
+
+    
+
+    
 
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     ObtainNodeData(G)
