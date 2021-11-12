@@ -8,7 +8,7 @@ Source Code Requirements
 Instructions to install source code requirements if not already installed
 --------------------------------------------------------
 1) Install pip3 (package installer for Python):
-sudo apt-get install python3-pip
+sudo apt-get install python3-pip (Ubuntu)
 2) Install Matplolib module :
 pip3 install matplotlib
 3) Install Networkx Python Graph Module:

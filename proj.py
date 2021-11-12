@@ -3,7 +3,8 @@
 # USAGE:             python3 proj3.py
 # NOTES:             Requires Python3
 #                    Requires networkx
-#                    Requires pip (if networkx is not installed)
+#                    Requires matplotlib
+#                    Requires pip3 (if modules are not installed)
 # Authors:           Andy Alarcon and Griffin Wagenknecht
 # -----------------------------------------------------------------------------
 
