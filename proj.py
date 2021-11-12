@@ -99,9 +99,6 @@ def runSimulation(G):
     initalPath_edges = zip(initalPath, initalPath[1:])
     initalPath_edges = set(initalPath_edges)
 
-    # Update graph with shortest path
-    DisplayGraph(G, "", 1, True, initalPath_edges, False, "", "")
-
     print("\nRunning failure simulation ...")
     # RemovalList[0] - edges that failed
     # RemovalList[1] - nodes that failed
@@ -299,6 +296,7 @@ def checkIfNodeExists(G, node):
 def DisplayGraph(P, H, fig, shortestPath, spath, deadNodes, dnodes, dedges):
 
     G = P.copy()
+    plt.ion()
 
     if shortestPath and deadNodes:
 
@@ -345,7 +343,8 @@ def DisplayGraph(P, H, fig, shortestPath, spath, deadNodes, dnodes, dedges):
         ax = plt.gca()
         ax.margins(0.2)
         plt.figure(fig)
-        plt.show(block=False)
+        plt.pause(0.001)
+        plt.show()
 
     elif not shortestPath and deadNodes:
 
@@ -392,7 +391,8 @@ def DisplayGraph(P, H, fig, shortestPath, spath, deadNodes, dnodes, dedges):
         ax = plt.gca()
         ax.margins(0.2)
         plt.figure(fig)
-        plt.show(block=False)
+        plt.pause(0.001)
+        plt.show()
 
     elif not shortestPath and not deadNodes:
 
@@ -413,7 +413,8 @@ def DisplayGraph(P, H, fig, shortestPath, spath, deadNodes, dnodes, dedges):
         ax = plt.gca()
         ax.margins(0.2)
         plt.figure(fig)
-        plt.show(block=False)
+        plt.pause(0.001)
+        plt.show()
 
     elif shortestPath and not deadNodes:
 
@@ -435,7 +436,8 @@ def DisplayGraph(P, H, fig, shortestPath, spath, deadNodes, dnodes, dedges):
         ax = plt.gca()
         ax.margins(0.2)
         plt.figure(fig)
-        plt.show(block=False)
+        plt.pause(0.001)
+        plt.show()
 
 
 # ----------------------------------------------------------------------------
