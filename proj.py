@@ -9,6 +9,7 @@
 # -----------------------------------------------------------------------------
 
 import networkx as nx
+import matplotlib
 import matplotlib.pyplot as plt
 import sys
 import random
@@ -91,9 +92,9 @@ def runSimulation(G):
     print("-------------------------------------------------------------")
     print("A path from router", sourceNode, "->", destNode,
           "will be simulated on using the provided network.")
-    initalPath = nx.shortest_path(
-        G, source=sourceNode, target=destNode, weight="failure")
-    print("Without any network failures, the shortest route is",
+    initalPath = computeShortestPossiblePath(
+        G, sourceNode, destNode, "failure")
+    print("Without any network failures, the shortest and safest route is",
           initalPath, ".")
 
     initalPath_edges = zip(initalPath, initalPath[1:])
@@ -146,13 +147,13 @@ def runSimulation(G):
                     sourceNode = returnedNodes[0]
                     destNode = returnedNodes[1]
 
-                # If we find a path, calculate the shortest route and update graph
+                # If we find a path, calculate the shortest and safest route and update graph
                 else:
-                    spath = nx.shortest_path(
-                        H, source=sourceNode, target=destNode, weight="failure")
+                    spath = computeShortestPossiblePath(
+                        H, sourceNode, destNode, "failure")
                     spath_edges = zip(spath, spath[1:])
                     spath_edges = set(spath_edges)
-                    print("\nWith the current network failures, the shortest route between", sourceNode, "and", destNode, "is",
+                    print("\nWith the current network failures, the shortest and safest route between", sourceNode, "and", destNode, "is",
                           spath, ".")
                     DisplayGraph(G, H, 1, True, spath_edges, True,
                                  RemovalLists[1], RemovalLists[0])
@@ -172,17 +173,59 @@ def runSimulation(G):
                     sourceNode = returnedNodes[0]
                     destNode = returnedNodes[1]
 
-                # If we find a path, calculate the shortest route and update graph
+                # If we find a path, calculate the shortest and safest route and update graph
                 else:
-                    spath = nx.shortest_path(
-                        H, source=sourceNode, target=destNode, weight="failure")
+                    spath = computeShortestPossiblePath(
+                        H, sourceNode, destNode, "failure")
                     spath_edges = zip(spath, spath[1:])
                     spath_edges = set(spath_edges)
-                    print("\nWith the current network failures, the shortest route between", sourceNode, "and", destNode, "is",
+                    print("\nWith the current network failures, the shortest and safest route between", sourceNode, "and", destNode, "is",
                           spath, ".")
                     DisplayGraph(G, H, 1, True, spath_edges, True,
                                  RemovalLists[1], RemovalLists[0])
 
+# ----------------------------------------------------------------------------
+# FUNCTION NAME:     computeShortestPossiblePath(G, snode, tnode, weightString)
+# PURPOSE:           Computes the shortest and safest path between two routers
+# -----------------------------------------------------------------------------
+
+
+def computeShortestPossiblePath(G, snode, tnode, weightString):
+ 
+ prevPathWeight = 1000000000
+ sPath = ""
+
+ allPaths = nx.all_shortest_paths(
+        G, source=snode, target=tnode, weight=weightString)
+
+ #Iterate through each of the shortest paths
+ for index, path in enumerate(allPaths):
+
+     #Compute the node failures weight for each node in the path
+     curPathWeight = computeNodePathWeight(G, path)
+     
+     #If the current path has a less chance to fail set it equal to the new one
+     if curPathWeight <= prevPathWeight :
+         sPath = path
+         prevPathWeight = curPathWeight
+ 
+ return sPath
+
+# ----------------------------------------------------------------------------
+# FUNCTION NAME:     computeNodePathWeight(G, path)
+# PURPOSE:           Computes the total failure weight of the nodes along a path
+# -----------------------------------------------------------------------------
+
+
+def computeNodePathWeight(G, path):
+ 
+ weight = 0
+
+ #Iterate through each of the shortest paths
+ for index, node in enumerate(path):
+     weight = int(G.nodes[node]['failure']) + weight
+ 
+ return weight
 
 # ----------------------------------------------------------------------------
 # FUNCTION NAME:     simulateNetworkFailues(G)
